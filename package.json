@@ -5,7 +5,8 @@
 	"module": "src/Collisions.mjs",
 	"types": "collisions.d.ts",
 	"scripts": {
-		"build-prod": "cross-env UV_THREADPOOL_SIZE=512 TARGET=exam node --max_old_space_size=65535 ./node_modules/webpack/bin/webpack.js --config ./webpack.config.js --progress --color --profile"
+		"build-prod": "cross-env UV_THREADPOOL_SIZE=512 node --max_old_space_size=65535 ./node_modules/webpack/bin/webpack.js --config ./webpack_prod.config.js --progress --color --profile",
+		"build-dev": "cross-env UV_THREADPOOL_SIZE=512 node --max_old_space_size=65535 ./node_modules/webpack/bin/webpack.js --config ./webpack_dev.config.js --progress --color --profile"
 	},
 	"repository": {
 		"type": "git",

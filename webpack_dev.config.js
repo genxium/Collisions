@@ -22,84 +22,24 @@ webpack.optimization.splitChunks.chunks: 'all'
 can drastically reduce the "total built size of all bundles", because it traverses all entries, i.e. "player_console" & "admin_console" & "writer_console" in this case, to extract and rebundle all duplicate codes/dependencies, REGARDLESS OF whether or not the shares are dynamic imports.
 However, the 'all' strategy can easily go wrong, if your codes fail to execute under "webpack.optimization.splitChunks.chunks: 'all'" configuration, chances are that webpack itself has a bug, and you should disable the "SplitChunksPlugin" temporarily to better seek the root cause. 
 */
-let entryObj = {
-  Collisions: baseAbsPath + './src/Collisions.mjs'
-};
-let outputPath = baseAbsPath + './dist/collisions';
 
-const commonConfig = {
-  resolve: {
-    modules: [
-      webModuleAbsPath
-    ]
-  },
-  resolveLoader: {
-    modules: [
-      webModuleAbsPath // This helps to resolve loader names, e.g. 'babel-loader'
-    ]
-  },
-  entry: entryObj,
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env']
-          }
-        },
-      },
-      {
-        test: /\.(css)$/,
-        exclude: /\.useable\.css$/,
-        use: ['style-loader', 'css-loader']
-      },
-      {
-        test: /\.(jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
-        loader: 'url-loader?limit=100000'
-      }
-    ]
-  },
-  output: {
-    path: outputPath,
-    filename: '[name].bundle.js',
-    sourceMapFilename: '[file].map'
-  }
-};
+const commonConfig = require('./webpack_common.config.js');
 
 const toExport = {
-  mode: 'production',
-  devtool: 'cheap-module-source-map',
+  mode: 'development',
+  devtool: 'eval',
   plugins: [
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': JSON.stringify('production')
+        'FSERVER': JSON.stringify('true'),
+        'NODE_ENV': JSON.stringify('development')
       }
     }),
     new BundleAnalyzerPlugin({
-      generateStatsFile: true,
-      statsFilename: 'webpack_bundle.production.stats', // Will be located in the "<proj-root>/frontend/bin/" dir.
+      generateStatsFile: true, 
+      statsFilename: 'webpack_bundle.development.stats', // Will be located in the "<proj-root>/frontend/bin/" dir.
     })
-  ],
-  optimization: {
-    /*
-    splitChunks: {
-      chunks: 'async'
-    },
-    */
-    minimizer: [
-      new TerserPlugin({
-        cache: true,
-        parallel: true,
-        sourceMap: false, // Must be set to true if using source-maps in production
-        terserOptions: {
-          // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
-        }
-      }),
-    ],
-  }
+  ]
 };
 
 Object.assign(toExport, commonConfig);

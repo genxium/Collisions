@@ -153,11 +153,12 @@ class Collisions {
 	}
 };
 
-export {
-	Collisions as default,
+const toExport = {
 	Collisions,
 	Result,
 	Circle,
 	Polygon,
 	Point,
 };
+
+module.exports = toExport; 
