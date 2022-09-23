@@ -1,17 +1,107 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
+const baseAbsPath = __dirname + '/';
 
-module.exports = {
-	entry : './demo/index.mjs',
+const webModuleAbsPath = baseAbsPath + '../node_modules';
+const webpack = require(webModuleAbsPath + '/webpack');
 
-	plugins : [
-		new HtmlWebpackPlugin({
-			filename : 'index.html',
-			title    : 'Collisions - Collision detection for circles, polygons, and points',
-		}),
-	],
+const TerserPlugin = require('terser-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-	output : {
-		path     : `${__dirname}/docs/demo/`,
-		filename : 'index.js',
-	},
+
+/*
+* These entry names are used not only by the "output" directive, by also by the "SplitChunksPlugin" https://webpack.js.org/plugins/split-chunks-plugin/.
+* 
+* As a case study, the "shared codes/dependencies by `admin_console` & `player_console`" could be extracted and rebundled into "admin_console~player_console.bundle.js". Similarly, the "shared codes/dependencies by `admin_console` & `player_console` & `writer_console`" could be extracted and rebundled into "admin_console~player_console~writer_console.bundle.js". 
+*
+* Surely you want the rebundling nomenclature to be controlled and "SplitChunksPlugin" allows you to do so.   
+*
+* Moreover, using 
+``` 
+webpack.optimization.splitChunks.chunks: 'all' 
+```
+can drastically reduce the "total built size of all bundles", because it traverses all entries, i.e. "player_console" & "admin_console" & "writer_console" in this case, to extract and rebundle all duplicate codes/dependencies, REGARDLESS OF whether or not the shares are dynamic imports.
+However, the 'all' strategy can easily go wrong, if your codes fail to execute under "webpack.optimization.splitChunks.chunks: 'all'" configuration, chances are that webpack itself has a bug, and you should disable the "SplitChunksPlugin" temporarily to better seek the root cause. 
+*/
+let entryObj = {
+  Collisions: baseAbsPath + './src/Collisions.mjs'
 };
+let outputPath = baseAbsPath + './dist/collisions';
+
+const commonConfig = {
+  resolve: {
+    modules: [
+      webModuleAbsPath
+    ]
+  },
+  resolveLoader: {
+    modules: [
+      webModuleAbsPath // This helps to resolve loader names, e.g. 'babel-loader'
+    ]
+  },
+  entry: entryObj,
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        },
+      },
+      {
+        test: /\.(css)$/,
+        exclude: /\.useable\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.(jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
+        loader: 'url-loader?limit=100000'
+      }
+    ]
+  },
+  output: {
+    path: outputPath,
+    filename: '[name].bundle.js',
+    sourceMapFilename: '[file].map'
+  }
+};
+
+const toExport = {
+  mode: 'production',
+  devtool: 'cheap-module-source-map',
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify('production')
+      }
+    }),
+    new BundleAnalyzerPlugin({
+      generateStatsFile: true,
+      statsFilename: 'webpack_bundle.production.stats', // Will be located in the "<proj-root>/frontend/bin/" dir.
+    })
+  ],
+  optimization: {
+    /*
+    splitChunks: {
+      chunks: 'async'
+    },
+    */
+    minimizer: [
+      new TerserPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: false, // Must be set to true if using source-maps in production
+        terserOptions: {
+          // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
+        }
+      }),
+    ],
+  }
+};
+
+Object.assign(toExport, commonConfig);
+
+module.exports = toExport;
