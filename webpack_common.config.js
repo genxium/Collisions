@@ -6,7 +6,7 @@ let entryObj = {
 };
 let outputPath = baseAbsPath + './dist/collisions';
 
-const webModuleAbsPath = baseAbsPath + '../node_modules';
+const webModuleAbsPath = baseAbsPath + './node_modules';
 
 const commonConfig = {
   resolve: {

@@ -1,7 +1,7 @@
 const path = require('path');
 const baseAbsPath = __dirname + '/';
 
-const webModuleAbsPath = baseAbsPath + '../node_modules';
+const webModuleAbsPath = baseAbsPath + './node_modules';
 const webpack = require(webModuleAbsPath + '/webpack');
 
 const TerserPlugin = require('terser-webpack-plugin');
